@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Açaí Retrô Express - Auditoria QA & Testes</title>
+    <title>Açaí Retrô Express - Pedido Online</title>
     <style>
         :root {
             --primary: #4a154b;
@@ -20,15 +20,17 @@
             color: var(--text);
             margin: 0;
             padding: 20px;
+            animation: aparecer .45s ease-out both;
         }
 
         .container {
-            max-width: 650px;
+            max-width: 100%;
             margin: 0 auto;
             background: var(--card);
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(74, 21, 75, 0.1);
             overflow: hidden;
+            animation: subir .55s ease-out both;
         }
 
         header {
@@ -60,6 +62,16 @@
             border-bottom: 1px dashed #e2e8f0;
         }
 
+        .tigelas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .tigela-opcao { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .tigela-opcao:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(74, 21, 75, .12); }
+        .tigela-opcao:has(input:checked) { border: 2px solid var(--primary); background: #faf5ff; }
+        .tigela-opcao input { margin: 0 5px 0 0; }
+        .tigela-opcao img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+        .tigela-opcao span { display: block; color: #718096; font-size: .85rem; margin-top: 4px; }
+        .estoque { color: #4a5568 !important; font-size: .8rem !important; }
+        .estoque.esgotado { color: #c53030 !important; font-weight: 700; }
+
         .item-info span { display: block; font-size: 0.85rem; color: #718096; }
 
         input[type="number"], input[type="text"], select {
@@ -78,6 +90,15 @@
             border-radius: 12px;
             padding: 18px;
             margin-top: 20px;
+        }
+
+        .tigela-opcao img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
 
         .linha-resumo {
@@ -107,7 +128,31 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 15px;
+            transition: transform .2s ease, filter .2s ease;
         }
+
+        .btn-pedir:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(.95); }
+
+        .btn-pedir:disabled { opacity: 0.75; cursor: wait; }
+
+        .status-pedido {
+            margin-top: 15px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .status-pedido p { margin: 0 0 12px; color: var(--primary); font-weight: 600; }
+        .trilha-progresso { height: 10px; overflow: hidden; border-radius: 10px; background: #e2e8f0; }
+        .barra-progresso { width: 0; height: 100%; border-radius: inherit; background: var(--accent); transition: width 2s linear; }
+        .carrinho-item { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+        .carrinho-item button, .btn-secundario { padding: 8px 12px; border: 0; border-radius: 8px; cursor: pointer; }
+        .carrinho-item button { background: #fed7d7; color: #9b2c2c; }
+        .btn-secundario { background: var(--primary); color: white; }
+        .pagina-entrega { padding: 40px 25px; text-align: center; }
+        .pagina-entrega h2 { color: var(--primary); }
 
         .badge-qa {
             display: inline-block;
@@ -118,6 +163,12 @@
             border-radius: 4px;
             margin-left: 6px;
         }
+
+        @keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes subir { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+        }
     </style>
 </head>
 <body>
@@ -125,34 +176,59 @@
 <div class="container">
     <header>
         <h1>🍧 Açaí Retrô Express</h1>
-        <p>Monte sua tigela personalizada <span class="badge-qa">Ambiente de Testes UC11</span></p>
+        <p>Monte sua tigela personalizada <span class="badge-qa">Pedido online</span></p>
     </header>
 
     <div class="conteudo">
         <div class="secao-titulo">1. Escolha a Tigela Base</div>
-        <div class="item-row">
-            <div class="item-info">
-                <strong>Tigela Tradicional 500ml</strong>
-                <span>Açaí puro batido com banana</span>
-            </div>
-            <span>R$ 18,00</span>
+        <div class="tigelas">
+            <label class="tigela-opcao">
+                <img src="/acai-retro-app/img/acai-conheca-a-versatilidade-do-alimento.webp" alt="Tigela de açaí tradicional" width="500" height="500">
+                <input type="radio" name="tigela" value="18" data-stock-key="tradicional" checked>
+                <strong>Tradicional 500ml</strong><span>Açaí puro com banana — R$ 18,00</span><span class="estoque" data-stock-label="tradicional"></span>
+            </label>
+            <label class="tigela-opcao">
+                <img src="/acai-retro-app/img/beneficios-do-acai-e-como-inclui-lo-na-alimentacao.webp" alt="Tigela de açaí tropical" width="500" height="500">
+                <input type="radio" name="tigela" value="22" data-stock-key="tropical">
+                <strong>Tropical 500ml</strong><span>Açaí com frutas — R$ 22,00</span><span class="estoque" data-stock-label="tropical"></span>
+            </label>
+            <label class="tigela-opcao">
+                <img src="/acai-retro-app/img/mais-acai-640x853.jpg" alt="Tigela de açaí especial" width="500" height="500">
+                <input type="radio" name="tigela" value="26" data-stock-key="especial">
+                <strong>Especial 700ml</strong><span>Açaí reforçado — R$ 26,00</span><span class="estoque" data-stock-label="especial"></span>
+            </label>
         </div>
 
         <div class="secao-titulo" style="margin-top: 20px;">2. Acompanhamentos Extras</div>
         <div class="item-row">
             <div class="item-info">
                 <strong>Paçoca de Amendoim</strong>
-                <span>R$ 2,00 por porção</span>
+                <span>R$ 2,00 por porção</span><span class="estoque" data-stock-label="pacoca"></span>
             </div>
-            <input type="number" id="qtdPacoca" class="input-qtd" value="0">
+            <!-- Adicionado min="0" -->
+            <input type="number" id="qtdPacoca" class="input-qtd" value="0" min="0" data-stock-key="pacoca">
         </div>
 
         <div class="item-row">
             <div class="item-info">
                 <strong>Leite Condensado</strong>
-                <span>R$ 3,00 por cobertura</span>
+                <span>R$ 3,00 por cobertura</span><span class="estoque" data-stock-label="leite"></span>
             </div>
-            <input type="number" id="qtdLeiteCondensado" class="input-qtd" value="0">
+            <!-- Adicionado min="0" -->
+            <input type="number" id="qtdLeiteCondensado" class="input-qtd" value="0" min="0" data-stock-key="leite">
+        </div>
+
+        <div class="item-row">
+            <div class="item-info"><strong>Granola</strong><span>R$ 2,50 por porção</span><span class="estoque" data-stock-label="granola"></span></div>
+            <input type="number" id="qtdGranola" class="input-qtd extra-acompanhamento" data-preco="2.5" data-stock-key="granola" value="0" min="0">
+        </div>
+        <div class="item-row">
+            <div class="item-info"><strong>Banana</strong><span>R$ 2,00 por porção</span><span class="estoque" data-stock-label="banana"></span></div>
+            <input type="number" id="qtdBanana" class="input-qtd extra-acompanhamento" data-preco="2" data-stock-key="banana" value="0" min="0">
+        </div>
+        <div class="item-row">
+            <div class="item-info"><strong>Morango</strong><span>R$ 3,50 por porção</span><span class="estoque" data-stock-label="morango"></span></div>
+            <input type="number" id="qtdMorango" class="input-qtd extra-acompanhamento" data-preco="3.5" data-stock-key="morango" value="0" min="0">
         </div>
 
         <div class="secao-titulo" style="margin-top: 20px;">3. Entrega & Cupom</div>
@@ -183,14 +259,101 @@
             </div>
         </div>
 
-        <button class="btn-pedir" onclick="finalizarPedido()">Finalizar Pedido</button>
+        <button class="btn-secundario" type="button" onclick="adicionarAoCarrinho()">Adicionar tigela ao carrinho</button>
+        <div class="resumo-card" aria-live="polite">
+            <div class="secao-titulo">4. Carrinho de compras</div>
+            <div id="listaCarrinho">Seu carrinho está vazio.</div>
+            <div class="linha-resumo"><span>Subtotal do carrinho:</span><span id="subtotalCarrinho">R$ 0,00</span></div>
+            <div class="linha-resumo"><span>Entrega:</span><span>R$ 5,00</span></div>
+            <div class="linha-resumo total-destaque"><span>Total do pedido:</span><span id="totalCarrinho">R$ 0,00</span></div>
+        </div>
+        <button class="btn-pedir" id="btnFinalizar" onclick="finalizarPedido()" disabled>Adicione um item para finalizar</button>
+        <div id="statusPedido" class="status-pedido" role="status" aria-live="polite" hidden>
+            <p id="mensagemPedido">🍌 Preparando sua experiência...</p>
+            <div class="trilha-progresso" aria-hidden="true"><div id="barraProgresso" class="barra-progresso"></div></div>
+        </div>
+    </div>
+    <div id="paginaEntrega" class="pagina-entrega" hidden>
+        <h2>✅ Pedido entregue!</h2>
+        <p>Obrigado por pedir no Açaí Retrô Express. Esperamos que aproveite!</p>
+        <button class="btn-pedir" type="button" onclick="pedirNovamente()">Fazer novo pedido</button>
     </div>
 </div>
 
 <script>
-    // ==============================================================
-    // MOTOR DE TESTES EM NAVEGADOR (Disponível globalmente)
-    // ==============================================================
+    // Estoque inicial deste navegador; para controle oficial entre dispositivos, valide no servidor.
+    const estoque = { tradicional: 20, tropical: 15, especial: 10, pacoca: 30, leite: 25, granola: 20, banana: 25, morango: 15 };
+    const carrinho = [];
+    let aguardandoConfirmacao = false;
+
+    function renderizarCarrinho() {
+        const lista = document.getElementById("listaCarrinho");
+        lista.replaceChildren();
+        if (carrinho.length === 0) {
+            lista.textContent = "Seu carrinho está vazio.";
+        } else {
+            carrinho.forEach((item, indice) => {
+                const linha = document.createElement("div");
+                linha.className = "carrinho-item";
+                const descricao = document.createElement("span");
+                descricao.textContent = `${item.nome} — ${item.descricaoExtras || "sem extras"} — R$ ${item.subtotal.toFixed(2)}`;
+                const remover = document.createElement("button");
+                remover.type = "button";
+                remover.textContent = "Remover";
+                remover.setAttribute("aria-label", `Remover ${item.nome} do carrinho`);
+                remover.addEventListener("click", () => { carrinho.splice(indice, 1); renderizarCarrinho(); });
+                linha.append(descricao, remover);
+                lista.appendChild(linha);
+            });
+        }
+        const subtotal = carrinho.reduce((soma, item) => soma + item.subtotal, 0);
+        const cupom = document.getElementById("cupomInput").value.trim().toUpperCase();
+        document.getElementById("subtotalCarrinho").textContent = `R$ ${subtotal.toFixed(2)}`;
+        document.getElementById("totalCarrinho").textContent = `R$ ${Math.max(0, calcularFaturaFinal(subtotal, 5, cupom)).toFixed(2)}`;
+        const finalizar = document.getElementById("btnFinalizar");
+        finalizar.disabled = carrinho.length === 0 || aguardandoConfirmacao;
+        finalizar.textContent = carrinho.length ? "Finalizar Pedido" : "Adicione um item para finalizar";
+    }
+
+    function adicionarAoCarrinho() {
+        const base = document.querySelector('input[name="tigela"]:checked');
+        const campos = [...document.querySelectorAll('input[type="number"][data-stock-key]')];
+        const extras = campos.map(campo => ({ chave: campo.dataset.stockKey, quantidade: Number(campo.value) || 0 }));
+        const noCarrinho = chave => carrinho.reduce((soma, item) => soma + (item.quantidades[chave] || 0), 0);
+        if (!base || estoque[base.dataset.stockKey] - noCarrinho(base.dataset.stockKey) < 1 || extras.some(item => item.quantidade + noCarrinho(item.chave) > estoque[item.chave])) {
+            alert("Estoque insuficiente para adicionar esses itens ao carrinho.");
+            return;
+        }
+        const precoBase = Number(base.value);
+        const extrasSubtotal = campos.reduce((soma, campo) => soma + (Number(campo.value) || 0) * (campo.id === "qtdPacoca" ? 2 : campo.id === "qtdLeiteCondensado" ? 3 : Number(campo.dataset.preco)), 0);
+        const nomes = { tradicional: "Tradicional 500ml", tropical: "Tropical 500ml", especial: "Especial 700ml" };
+        const descricaoExtras = campos.filter(campo => Number(campo.value) > 0).map(campo => `${campo.value}x ${campo.closest(".item-row").querySelector("strong").textContent}`).join(", ");
+        const quantidades = { [base.dataset.stockKey]: 1 };
+        extras.forEach(item => { quantidades[item.chave] = (quantidades[item.chave] || 0) + item.quantidade; });
+        carrinho.push({ nome: nomes[base.dataset.stockKey], subtotal: precoBase + extrasSubtotal, descricaoExtras, quantidades });
+        renderizarCarrinho();
+    }
+
+    function atualizarEstoqueVisual() {
+        document.querySelectorAll("[data-stock-label]").forEach(rotulo => {
+            const quantidade = estoque[rotulo.dataset.stockLabel];
+            rotulo.textContent = quantidade === 0 ? "Esgotado" : `Estoque: ${quantidade}`;
+            rotulo.classList.toggle("esgotado", quantidade === 0);
+        });
+        document.querySelectorAll("[data-stock-key]").forEach(campo => {
+            const disponivel = estoque[campo.dataset.stockKey];
+            if (campo.type === "number") {
+                campo.max = disponivel;
+                campo.disabled = disponivel === 0;
+            } else {
+                campo.disabled = disponivel === 0;
+                if (disponivel === 0 && campo.checked) {
+                    document.querySelector('input[name="tigela"]:not(:disabled)').checked = true;
+                }
+            }
+        });
+    }
+
     function assert(nomeDoTeste, resultadoObtido, resultadoEsperado) {
         if (resultadoObtido === resultadoEsperado) {
             console.log(`%c[✔ PASSOU] ${nomeDoTeste}`, "color: #27ae60; font-weight: bold; font-size: 12px;");
@@ -199,53 +362,163 @@
         }
     }
 
-    // ==================
-    // LÓGICA DO SISTEMA 
-    // ==================
-    function calcularSubtotalAcai(qtdPacoca, qtdLeiteCond) {
-        let precoBase = 18.00;
+    function calcularSubtotalAcai(qtdPacoca, qtdLeiteCond, extras = 0, precoBase = 18.00) {
         let precoPacoca = 2.00;
-        let precoLeiteCond = 0.30;
+        let precoLeiteCond = 3.00;
 
-        return precoBase + (qtdPacoca * precoPacoca) + (qtdLeiteCond * precoLeiteCond);
+        let pacocasValidas = Math.max(0, Number(qtdPacoca) || 0);
+        let leiteCondValido = Math.max(0, Number(qtdLeiteCond) || 0);
+
+        return Number(precoBase) + (pacocasValidas * precoPacoca) + (leiteCondValido * precoLeiteCond) + (Number(extras) || 0);
     }
 
     function calcularFaturaFinal(subtotal, frete, cupom) {
-        let total = subtotal + frete;
+        let subtotalNum = Number(subtotal) || 0;
+        let freteNum = Number(frete) || 0;
 
+        let total = subtotalNum + freteNum;
+        
         if (cupom === "RETRO10") {
             total = total - 10.00;
         }
-
+        
         return total;
     }
 
-    function atualizarCalculos() {
-        let qPacoca = parseInt(document.getElementById("qtdPacoca").value) || 0;
-        let qLeite = parseInt(document.getElementById("qtdLeiteCondensado").value) || 0;
-        let cupom = document.getElementById("cupomInput").value.trim().toUpperCase();
-        let taxaFixa = "5.00";
+    function executarBateriaTestes() {
+        {
+            let resultadoObtido = calcularSubtotalAcai(0, 0);
+            assert("CT-01: Tigela base padrão sem adicionais", resultadoObtido, 18.00);
+        }
+        {
+            let resultadoObtido = calcularSubtotalAcai(2, 0);
+            assert("CT-02: Tigela com 2 paçocas", resultadoObtido, 22.00);
+        }
+        {
+            let resultadoObtido = calcularSubtotalAcai(0, 2);
+            assert("CT-03: Tigela com 2 coberturas de leite condensado", resultadoObtido, 24.00);
+        }
+        {
+            let resultadoObtido = calcularSubtotalAcai(-2, 0);
+            assert("CT-04: Quantidade negativa tratada sem reduzir base", resultadoObtido, 18.00);
+        }
+        {
+            let resultadoObtido = calcularFaturaFinal(20.00, 5.00, "RETRO10");
+            assert("CT-05: Fatura final com cupom RETRO10", resultadoObtido, 15.00);
+        }
+    }
 
-        let subtotal = calcularSubtotalAcai(qPacoca, qLeite);
+    executarBateriaTestes();
+
+    function atualizarCalculos() {
+        let inputPacoca = document.getElementById("qtdPacoca");
+        let inputLeite = document.getElementById("qtdLeiteCondensado");
+
+        // Corrige o campo visualmente caso o usuário digite um número negativo
+        if (inputPacoca.value < 0) inputPacoca.value = 0;
+        if (inputLeite.value < 0) inputLeite.value = 0;
+        document.querySelectorAll('input[type="number"][data-stock-key]').forEach(input => {
+            input.value = Math.min(estoque[input.dataset.stockKey], Math.max(0, parseInt(input.value, 10) || 0));
+        });
+        document.querySelectorAll(".extra-acompanhamento").forEach(input => {
+            if (input.value < 0) input.value = 0;
+        });
+
+        let qPacoca = parseInt(inputPacoca.value) || 0;
+        let qLeite = parseInt(inputLeite.value) || 0;
+        let cupom = document.getElementById("cupomInput").value.trim().toUpperCase();
+        let taxaFixa = 5.00;
+
+        let extras = Array.from(document.querySelectorAll(".extra-acompanhamento"))
+            .reduce((total, input) => total + (parseInt(input.value) || 0) * Number(input.dataset.preco), 0);
+        let precoBase = Number(document.querySelector('input[name="tigela"]:checked').value);
+        let subtotal = calcularSubtotalAcai(qPacoca, qLeite, extras, precoBase);
         let totalFinal = calcularFaturaFinal(subtotal, taxaFixa, cupom);
 
         document.getElementById("txtSubtotal").innerText = "R$ " + subtotal.toFixed(2);
         document.getElementById("txtTotal").innerText = "R$ " + totalFinal.toFixed(2);
     }
 
-    function finalizarPedido() {
-        alert("Pedido enviado para a cozinha com sucesso!");
+    async function finalizarPedido() {
+        const botao = document.querySelector(".btn-pedir");
+        const status = document.getElementById("statusPedido");
+        const mensagem = document.getElementById("mensagemPedido");
+        const barra = document.getElementById("barraProgresso");
+        if (aguardandoConfirmacao) {
+            confirmarEntrega();
+            return;
+        }
+        if (carrinho.length === 0) {
+            alert("Adicione pelo menos um item ao carrinho antes de finalizar o pedido.");
+            renderizarCarrinho();
+            return;
+        }
+        const etapas = [
+            "🍌 Batendo o açaí fresquinho...",
+            "🥜 Caprichando nos acompanhamentos...",
+            "📦 Embalando seu pedido com carinho...",
+            "🛵 Seu pedido está saindo para a entrega!"
+        ];
+
+        const totaisCarrinho = {};
+        carrinho.forEach(item => Object.entries(item.quantidades).forEach(([chave, quantidade]) => { totaisCarrinho[chave] = (totaisCarrinho[chave] || 0) + quantidade; }));
+        if (Object.entries(totaisCarrinho).some(([chave, quantidade]) => quantidade > estoque[chave])) {
+            mensagem.textContent = "Estoque insuficiente. Ajuste os itens e tente novamente.";
+            status.hidden = false;
+            return;
+        }
+
+        botao.disabled = true;
+        botao.textContent = "Preparando seu pedido...";
+        status.hidden = false;
+
+        Object.entries(totaisCarrinho).forEach(([chave, quantidade]) => { estoque[chave] -= quantidade; });
+        atualizarEstoqueVisual();
+
+        for (let i = 0; i < etapas.length; i++) {
+            mensagem.textContent = etapas[i];
+            barra.style.width = `${(i + 1) * 25}%`;
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        aguardandoConfirmacao = true;
+        botao.disabled = false;
+        botao.textContent = "Confirmar entrega";
+        mensagem.textContent = "🛵 Pedido enviado. Confirme quando receber sua entrega.";
+        barra.style.width = "100%";
+    }
+
+    function confirmarEntrega() {
+        if (!window.confirm("Confirma que o pedido foi entregue?")) return;
+        document.querySelector(".conteudo").hidden = true;
+        document.getElementById("paginaEntrega").hidden = false;
+    }
+
+    function pedirNovamente() {
+        carrinho.length = 0;
+        aguardandoConfirmacao = false;
+        document.querySelector(".conteudo").hidden = false;
+        document.getElementById("paginaEntrega").hidden = true;
+        document.getElementById("statusPedido").hidden = true;
+        document.getElementById("barraProgresso").style.width = "0";
+        const botao = document.getElementById("btnFinalizar");
+        botao.disabled = true;
+        botao.textContent = "Adicione um item para finalizar";
+        document.querySelectorAll('input[type="number"][data-stock-key]').forEach(input => { input.value = 0; });
+        atualizarCalculos();
+        renderizarCarrinho();
     }
 
     document.getElementById("qtdPacoca").addEventListener("input", atualizarCalculos);
     document.getElementById("qtdLeiteCondensado").addEventListener("input", atualizarCalculos);
-    document.getElementById("cupomInput").addEventListener("input", atualizarCalculos);
+    document.querySelectorAll(".extra-acompanhamento").forEach(input => input.addEventListener("input", atualizarCalculos));
+    document.querySelectorAll('input[name="tigela"]').forEach(input => input.addEventListener("change", atualizarCalculos));
+    document.getElementById("cupomInput").addEventListener("input", () => { atualizarCalculos(); renderizarCarrinho(); });
 
+    atualizarEstoqueVisual();
     atualizarCalculos();
+    renderizarCarrinho();
 </script>
-
-<!-- Importa a suíte gerada pelos alunos via IA -->
-<script src="testes.js"></script>
 
 </body>
 </html>
